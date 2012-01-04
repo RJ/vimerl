@@ -123,12 +123,13 @@ function s:erlangFindExternalFunc(module, base)
                 " if someone have better idea, please change it
                 let description = ''
                 " Don't look man pages if the module is present in the current directory
-                if g:erlangCompletionDisplayDoc != 0 && !filereadable(a:module . '.erl')
-                    let system_command = g:erlangCompletionGrep . ' -A 1 "\.B" ' . file_path . ' | grep -EZo "\<' .
-\                           function_name . '\>\((\w+, ){' . number_of_comma . '}[^),]*\) -> .*"'
-                    let description = system(system_command)
-                    let description = description[:-2]
-                endif
+               "if g:erlangCompletionDisplayDoc != 0 && !filereadable(a:module . '.erl')
+               "    let system_command = g:erlangCompletionGrep . ' -A 1 "\.B" ' . file_path . ' | grep -EZo "\<' .
+"\                          function_name . '\>\((\w+, ){' . number_of_comma . '}[^),]*\) -> .*" 2> /dev/null '
+               "    let description = system(system_command)
+               "    let description = description[:-2]
+               "endif
+                let description = ''
                 if description == ''
                     let description = element " if function doesn't have description e.g. lists:rmerge, put rmerge/2 instead
                 endif
