@@ -2,6 +2,9 @@
 -export([main/1]).
 
 main([ModuleName]) ->
+    %% TODO use rebar.config here:
+    code:add_path("ebin"),
+    code:add_paths( filelib:wildcard("deps/*/ebin") ),
     Module = erlang:list_to_atom(ModuleName),
     try Module:module_info(exports) of
         Functions ->
