@@ -89,7 +89,6 @@ function! erlangcomplete#Complete(findstart, base)
 		return []
 	endif
 endfunction
-
 " Auxiliary functions for completion {{{1 
 " Find the next non-blank line {{{2
 function s:erlangFindNextNonBlank(lnum)
@@ -102,19 +101,24 @@ function s:erlangFindNextNonBlank(lnum)
    return lnum
 endfunction
 			
+
+function! erlangcomplete#FEF(m,b)
+    return s:erlangFindExternalFunc(a:m,a:b)
+endfunction
 " vim: foldmethod=marker:
 " Find external function names {{{2
 function s:erlangFindExternalFunc(module, base)
         " If it's a local module, try to compile it
-        if filereadable(a:module . '.erl') && !filereadable(a:module . '.beam')
-            silent execute '!erlc' a:module . '.erl' '>/dev/null' '2>/dev/null'
-            redraw!
-        endif
+        "if filereadable(a:module . '.erl') && !filereadable(a:module . '.beam')
+            "silent execute '!erlc' a:module . '.erl' '>/dev/null' '2>/dev/null'
+            "redraw!
+        "endif
         let functions = system(s:erlangCompletionPath . ' ' . a:module)
         for element in sort(split(functions, '\n'))
             if match(element, a:base) == 0
-                let function_name = matchstr(element, a:base . '\w\+')
-                let number_of_args = matchstr(element, '\d\+', len(function_name))
+                let parts = split(element, '\t')
+                let function_name = parts[0]
+                let number_of_args = parts[1]
                 let number_of_comma = max([number_of_args - 1, 0])
                 let file_path = g:erlangManPath . '/man?/' . a:module . '\.?' . g:erlangManSuffix
                 " [:-2] cutting some weird characters at the end
@@ -123,17 +127,16 @@ function s:erlangFindExternalFunc(module, base)
                 " if someone have better idea, please change it
                 let description = ''
                 " Don't look man pages if the module is present in the current directory
-               "if g:erlangCompletionDisplayDoc != 0 && !filereadable(a:module . '.erl')
-               "    let system_command = g:erlangCompletionGrep . ' -A 1 "\.B" ' . file_path . ' | grep -EZo "\<' .
-"\                          function_name . '\>\((\w+, ){' . number_of_comma . '}[^),]*\) -> .*" 2> /dev/null '
-               "    let description = system(system_command)
-               "    let description = description[:-2]
-               "endif
-                let description = ''
+                if g:erlangCompletionDisplayDoc != 0 && !filereadable(a:module . '.erl')
+                    let system_command = g:erlangCompletionGrep . ' -A 1 "\.B" ' . file_path . ' | grep -EZo "\<' .
+\                          function_name . '\>\((\w+, ){' . number_of_comma . '}[^),]*\) -> .*" 2> /dev/null '
+                    let description = system(system_command)
+                    let description = description[:-2]
+                endif
                 if description == ''
                     let description = element " if function doesn't have description e.g. lists:rmerge, put rmerge/2 instead
                 endif
-                let field = {'word': function_name . '(', 'abbr': description, 'kind': 'f', 'dup': 1} " always duplicate functions
+                let field = {'word': function_name, 'abbr': description, 'kind': 'f', 'dup': 1} " always duplicate functions
                 call complete_add(field)
             endif
         endfor
