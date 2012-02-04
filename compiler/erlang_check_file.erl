@@ -2,16 +2,18 @@
 -export([main/1]).
 
 main([File_Name]) ->
+    %% If we use parse transforms (lager, etc):
+    code:add_paths(["ebin"] ++ filelib:wildcard("deps/*/ebin")),
     Default = [     warn_obsolete_guard,
                     warn_unused_import,
                     warn_shadow_vars, warn_export_vars,
                     strong_validation, report],
-    case filelib:is_file("rebar.config") of
-        true ->
-            {ok, Terms} = file:consult("rebar.config"),
+    %% Take our options from rebar.config:
+    case file:consult("rebar.config") of
+        {ok, Terms} ->
             Opts = proplists:get_value(erl_opts, Terms, []),
         	compile:file(File_Name, Default ++ Opts);
-        false ->
-            compile:file(File_Name, Default)
+        _ ->
+            compile:file(File_Name, Default ++ [{i, "../include"}])
     end.
     
